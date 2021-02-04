@@ -39,16 +39,17 @@ def valid_card(card):
 
 def find_card(cards, pattern):
     pattern = pattern.lower()
-    any_match = None
-    legendary_creature_found = False
-    for name in cards.keys():
-        if name == pattern:
-            return cards[name]
-        if (any_match is None or not legendary_creature_found) and pattern in name:
-            any_match = cards[name]
-            legendary_creature_found = re.match("Legendary.*Creature", cards[name]["type_line"])
+    if cards.get(pattern) is not None:
+        return cards[pattern]
 
-    return any_match
+    match = None
+    legendary_creature_matched = False
+    for name in cards.keys():
+        if (match is None or not legendary_creature_matched) and pattern in name:
+            match = cards[name]
+            legendary_creature_matched = re.match("Legendary.*Creature", cards[name]["type_line"])
+
+    return match
 
 
 def start_discord_listener(cards, api_key):
