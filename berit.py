@@ -67,19 +67,20 @@ def start_discord_listener(cards, api_key):
             logging.debug(f"Ignoring message sent in channel other than {SUBSCRIBED_CHANNELS}.")
             return
 
-        pattern = re.match("^\[(.+)\]$", message.content).group(1)
-        if pattern is None:
-            logging.debug(f"No pattern could be extracted from message '{message.content}'.")
+        patterns = re.findall("\[(.+?)\]", message.content)
+        if not patterns:
+            logging.debug(f"No patterns could be extracted from message '{message.content}'.")
             return
 
-        card = find_card(cards, pattern)
-        if card is None:
-            logging.debug(f"No card found matching pattern '{pattern}'.")
+        matches = [card for card in (find_card(cards, pattern) for pattern in patterns) if card is not None]
+        if not matches:
+            logging.debug(f"No card found matching patterns '{patterns}'.")
             return
 
-        scryfall_uri = card["scryfall_uri"]
-        logging.info(f"Returning card '{scryfall_uri}' matching pattern '{pattern}'.")
-        await message.channel.send(f"{scryfall_uri}")
+        result = [card.get("scryfall_uri") for card in matches]
+        logging.info(f"Returning cards '{result}' matching pattern '{patterns}'.")
+        formatted_result = "\n".join(result)
+        await message.channel.send(f"{formatted_result}")
 
     client.run(api_key)
 
