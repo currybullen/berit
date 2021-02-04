@@ -75,11 +75,11 @@ def start_discord_listener(cards, api_key):
 
         matches = [card for card in (find_card(cards, pattern) for pattern in patterns) if card is not None]
         if not matches:
-            logging.debug(f"No card found matching patterns '{patterns}'.")
+            logging.debug(f"No card(s) found matching patterns '{patterns}'.")
             return
 
         result = [card.get("scryfall_uri") for card in matches]
-        logging.info(f"Returning cards '{result}' matching pattern '{patterns}'.")
+        logging.info(f"Returning cards '{result}' matching patterns '{patterns}'.")
         formatted_result = "\n".join(result)
         await message.channel.send(f"{formatted_result}")
 
