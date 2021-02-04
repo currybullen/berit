@@ -44,7 +44,7 @@ def find_card(cards, pattern):
     for name in cards.keys():
         if name == pattern:
             return cards[name]
-        if (any_match is None or not legendary_creature_found) and re.search(pattern, name, flags=re.IGNORECASE):
+        if (any_match is None or not legendary_creature_found) and pattern in name:
             any_match = cards[name]
             legendary_creature_found = re.match("Legendary.*Creature", cards[name]["type_line"])
 
