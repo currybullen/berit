@@ -15,16 +15,10 @@ def main(api_key):
 
 def fetch_cards_from_source():
     bulk_data_sources = requests.get(BULK_DATA_METADATA).json()["data"]
-    oracle_data_uri = None
-    for source in bulk_data_sources:
-        if source["name"] == "Oracle Cards":
-            oracle_data_uri = source["download_uri"]
+    oracle_source = next(filter(lambda source: source["name"] == "Oracle Cards", bulk_data_sources))
+    oracle_data = requests.get(oracle_source["download_uri"]).json()
 
-    cards = {}
-    for card in requests.get(oracle_data_uri).json():
-        if valid_card(card):
-            cards[card["name"].lower()] = card
-    return cards
+    return {card["name"].lower(): card for card in filter(valid_card, oracle_data)}
 
 
 def valid_card(card):
