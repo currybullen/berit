@@ -10,7 +10,6 @@ SUBSCRIBED_CHANNELS = ["magic"]
 
 
 def main(api_key):
-    logging.basicConfig(level=logging.DEBUG)
     cards = fetch_cards_from_source()
     start_discord_listener(cards, api_key)
 
