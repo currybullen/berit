@@ -22,13 +22,9 @@ def fetch_cards_from_source():
 
 
 def valid_card(card):
-    if card["object"] != "card":
-        return False
-    if card["lang"] != "en":
-        return False
-    if card["legalities"]["commander"] != "legal":
-        return False
-    return True
+    return (card["object"] == "card"
+            and card["lang"] == "en"
+            and card["legalities"]["commander"] == "legal")
 
 
 def find_card(cards, pattern):
