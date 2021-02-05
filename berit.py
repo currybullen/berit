@@ -33,15 +33,17 @@ def valid_card(card):
 
 def find_card(cards, pattern):
     pattern = pattern.lower()
-    if cards.get(pattern) is not None:
+
+    if cards.get(pattern):
         return cards[pattern]
 
     match = None
-    legendary_creature_matched = False
     for name in cards.keys():
-        if (match is None or not legendary_creature_matched) and pattern in name:
-            match = cards[name]
-            legendary_creature_matched = re.match("Legendary.*Creature", cards[name]["type_line"])
+        if pattern not in name:
+            continue
+        if re.match("Legendary.*Creature", cards[name]["type_line"]):
+            return cards[name]
+        match = cards[name]
 
     return match
 
