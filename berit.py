@@ -73,7 +73,7 @@ def start_discord_listener(cards, api_key):
         matches = []
         for pattern in patterns:
             match = find_card(cards, pattern)
-            if match is not None:
+            if match:
                 matches.append(match)
 
         if not matches:
