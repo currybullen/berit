@@ -18,13 +18,11 @@ def fetch_cards_from_source():
     oracle_source = next(filter(lambda source: source["name"] == "Oracle Cards", bulk_data_sources))
     oracle_data = requests.get(oracle_source["download_uri"]).json()
 
+    def valid_card(card):
+        return (card["object"] == "card"
+                and card["lang"] == "en"
+                and card["legalities"]["commander"] == "legal")
     return {card["name"].lower(): card for card in filter(valid_card, oracle_data)}
-
-
-def valid_card(card):
-    return (card["object"] == "card"
-            and card["lang"] == "en"
-            and card["legalities"]["commander"] == "legal")
 
 
 def find_card(cards, pattern):
