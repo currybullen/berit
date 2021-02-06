@@ -4,7 +4,7 @@ import re
 import discord
 import logging
 
-BULK_DATA_METADATA = "https://api.scryfall.com/bulk-data"
+DATA_SOURCES_METADATA = "https://api.scryfall.com/bulk-data"
 SUBSCRIBED_CHANNELS = ["magic"]
 
 
@@ -14,14 +14,15 @@ def main(api_key):
 
 
 def fetch_cards_from_source():
-    bulk_data_sources = requests.get(BULK_DATA_METADATA).json()["data"]
-    oracle_source = next(filter(lambda source: source["name"] == "Oracle Cards", bulk_data_sources))
+    data_sources = requests.get(DATA_SOURCES_METADATA).json()["data"]
+    oracle_source = next(filter(lambda source: source["name"] == "Oracle Cards", data_sources))
     oracle_data = requests.get(oracle_source["download_uri"]).json()
 
     def valid_card(card):
         return (card["object"] == "card"
                 and card["lang"] == "en"
                 and card["legalities"]["commander"] == "legal")
+
     return {card["name"].lower(): card for card in filter(valid_card, oracle_data)}
 
 
