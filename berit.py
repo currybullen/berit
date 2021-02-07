@@ -64,12 +64,7 @@ def start_discord_listener(cards, api_key):
             logging.debug(f"No patterns could be extracted from message '{message.content}'.")
             return
 
-        matches = []
-        for pattern in patterns:
-            match = find_card(pattern, cards)
-            if match:
-                matches.append(match)
-
+        matches = list(filter(None, map(lambda pattern: find_card(pattern, cards), patterns)))
         if not matches:
             logging.debug(f"No card(s) found matching patterns '{patterns}'.")
             return
