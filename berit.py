@@ -9,8 +9,8 @@ SUBSCRIBED_CHANNELS = ["magic"]
 
 
 def main(api_key):
-    commanders, other_99 = fetch_cards_from_source()
-    start_discord_listener(commanders, other_99, api_key)
+    cards = fetch_cards_from_source()
+    start_discord_listener(cards, api_key)
 
 
 def fetch_cards_from_source():
@@ -23,36 +23,27 @@ def fetch_cards_from_source():
                 and card["lang"] == "en"
                 and card["legalities"]["commander"] == "legal")
 
-    commanders = {}
-    other_99 = {}
-    for card in filter(valid_card, oracle_data):
-        if re.match("Legendary.*Creature", card["type_line"]):
-            commanders[card["name"].lower()] = card
-        else:
-            other_99[card["name"].lower()] = card
+    def sort_key(card):
+        return re.match("Legendary.*Creature", card["type_line"]) is None
 
-    return commanders, other_99
+    cards = sorted(filter(valid_card, oracle_data), key=sort_key)
+    return {card["name"].lower(): card for card in cards}
 
 
-def find_card(commanders, other_99, pattern):
+def find_card(pattern, cards):
     pattern = pattern.lower()
 
-    if commanders.get(pattern):
-        return commanders[pattern]
-    if other_99.get(pattern):
-        return other_99[pattern]
+    if cards.get(pattern):
+        return cards[pattern]
 
-    for name in commanders.keys():
+    for name, card in cards.items():
         if pattern in name:
-            return commanders[name]
-    for name in other_99.keys():
-        if pattern in name:
-            return other_99[name]
+            return card
 
     return None
 
 
-def start_discord_listener(commanders, other_99, api_key):
+def start_discord_listener(cards, api_key):
     client = discord.Client()
 
     @client.event
@@ -76,7 +67,7 @@ def start_discord_listener(commanders, other_99, api_key):
 
         matches = []
         for pattern in patterns:
-            match = find_card(commanders, other_99, pattern)
+            match = find_card(pattern, cards)
             if match:
                 matches.append(match)
 
