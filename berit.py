@@ -9,8 +9,8 @@ SUBSCRIBED_CHANNELS = ["magic"]
 
 
 def main(api_key):
-    cards = fetch_cards_from_source()
-    start_discord_listener(cards, api_key)
+    commanders, other_99 = fetch_cards_from_source()
+    start_discord_listener(commanders, other_99, api_key)
 
 
 def fetch_cards_from_source():
@@ -23,31 +23,36 @@ def fetch_cards_from_source():
                 and card["lang"] == "en"
                 and card["legalities"]["commander"] == "legal")
 
-    def sorting_key(card):
-        return re.match("Legendary.*Creature", card["type_line"]) is None
+    commanders = {}
+    other_99 = {}
+    for card in filter(valid_card, oracle_data):
+        if re.match("Legendary.*Creature", card["type_line"]):
+            commanders[card["name"].lower()] = card
+        else:
+            other_99[card["name"].lower()] = card
 
-    cards = sorted(filter(valid_card, oracle_data), key=sorting_key)
-    return {card["name"].lower(): card for card in cards}
+    return commanders, other_99
 
 
-def find_card(cards, pattern):
+def find_card(commanders, other_99, pattern):
     pattern = pattern.lower()
 
-    if cards.get(pattern):
-        return cards[pattern]
+    if commanders.get(pattern):
+        return commanders[pattern]
+    if other_99.get(pattern):
+        return other_99[pattern]
 
-    match = None
-    for name in cards.keys():
-        if pattern not in name:
-            continue
-        if re.match("Legendary.*Creature", cards[name]["type_line"]):
-            return cards[name]
-        match = cards[name]
+    for name in commanders.keys():
+        if pattern in name:
+            return commanders[name]
+    for name in other_99.keys():
+        if pattern in name:
+            return other_99[name]
 
-    return match
+    return None
 
 
-def start_discord_listener(cards, api_key):
+def start_discord_listener(commanders, other_99, api_key):
     client = discord.Client()
 
     @client.event
@@ -71,7 +76,7 @@ def start_discord_listener(cards, api_key):
 
         matches = []
         for pattern in patterns:
-            match = find_card(cards, pattern)
+            match = find_card(commanders, other_99, pattern)
             if match:
                 matches.append(match)
 
