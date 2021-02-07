@@ -23,7 +23,11 @@ def fetch_cards_from_source():
                 and card["lang"] == "en"
                 and card["legalities"]["commander"] == "legal")
 
-    return {card["name"].lower(): card for card in filter(valid_card, oracle_data)}
+    def sorting_key(card):
+        return re.match("Legendary.*Creature", card["type_line"]) is None
+
+    cards = sorted(filter(valid_card, oracle_data), key=sorting_key)
+    return {card["name"].lower(): card for card in cards}
 
 
 def find_card(cards, pattern):
