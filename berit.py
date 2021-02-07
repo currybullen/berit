@@ -36,11 +36,10 @@ def find_card(pattern, cards):
     if cards.get(pattern):
         return cards[pattern]
 
-    for name, card in cards.items():
-        if pattern in name:
-            return card
-
-    return None
+    return next(
+        map(lambda name: cards[name],
+            filter(lambda name: pattern in name, cards.keys())),
+        None)
 
 
 def start_discord_listener(cards, api_key):
