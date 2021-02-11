@@ -7,7 +7,6 @@ import argparse
 import os
 
 DATA_SOURCES_METADATA = "https://api.scryfall.com/bulk-data"
-SUBSCRIBED_CHANNELS = ["magic"]
 
 
 def main(args):
@@ -58,7 +57,7 @@ def start_discord_listener(cards, api_key, subscribed_channels):
             return
 
         if str(message.channel) not in subscribed_channels:
-            logging.debug(f"Ignoring message sent in channel other than {SUBSCRIBED_CHANNELS}.")
+            logging.debug(f"Ignoring message sent in channel other than {subscribed_channels}.")
             return
 
         patterns = re.findall("\[(.+?)\]", message.content)
