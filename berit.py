@@ -5,6 +5,7 @@ import discord
 import logging
 import argparse
 import os
+import random
 
 DATA_SOURCES_METADATA = "https://api.scryfall.com/bulk-data"
 
@@ -33,6 +34,14 @@ def fetch_cards_from_source():
 
 def find_card(pattern, cards):
     pattern = pattern.lower()
+
+    if pattern == "!random":
+        return list(cards.values())[random.randint(0, len(cards) - 1)]
+
+    if pattern == "!random_commander":
+        commanders = filter(lambda card: re.match("Legendary.*Creature", card["type_line"]), list(cards.values()))
+        commanders = list(commanders)
+        return commanders[random.randint(0, len(commanders) - 1)]
 
     if cards.get(pattern):
         return cards[pattern]
