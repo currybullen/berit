@@ -12,7 +12,7 @@ DATA_SOURCES_METADATA = "https://api.scryfall.com/bulk-data"
 
 def main(args):
     cards = fetch_cards_from_source()
-    start_discord_listener(cards, args.api_key, args.channel)
+    start_discord_listener(cards, args.token, args.channel)
 
 
 def fetch_cards_from_source():
@@ -52,7 +52,7 @@ def find_card(pattern, cards):
         None)
 
 
-def start_discord_listener(cards, api_key, subscribed_channels):
+def start_discord_listener(cards, token, subscribed_channels):
     client = discord.Client()
 
     @client.event
@@ -84,22 +84,22 @@ def start_discord_listener(cards, api_key, subscribed_channels):
         formatted_result = "\n".join(result)
         await message.channel.send(f"{formatted_result}")
 
-    client.run(api_key)
+    client.run(token)
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description="A Discord MTG bot ")
-    parser.add_argument("--api-key",
-                        help="Relevant Discord API key.",
-                        default=os.environ.get("BERIT_API_KEY"))
+    parser.add_argument("--token",
+                        help="Relevant Discord bot token.",
+                        default=os.environ.get("BERIT_TOKEN"))
     parser.add_argument("--channel",
                         action="append",
                         help="A channel which Berit listens in. May be supplied multiple times.",
                         required=True)
 
     args = parser.parse_args()
-    if args.api_key is None:
-        logging.error("API supplied neither by --api-key or env variable BERIT_API_KEY.")
+    if args.token is None:
+        logging.error("API supplied neither by --token or env variable BERIT_TOKEN")
         sys.exit(1)
 
     return args
