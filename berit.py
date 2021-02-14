@@ -7,7 +7,7 @@ import argparse
 import os
 import random
 
-DATA_SOURCES_METADATA = "https://api.scryfall.com/bulk-data"
+DATA_SOURCES_METADATA = "https://api.scryfall.com/bulk-data/oracle-cards"
 
 
 def main(args):
@@ -16,9 +16,8 @@ def main(args):
 
 
 def fetch_cards_from_source():
-    data_sources = requests.get(DATA_SOURCES_METADATA).json()["data"]
-    oracle_source = next(filter(lambda source: source["name"] == "Oracle Cards", data_sources))
-    oracle_data = requests.get(oracle_source["download_uri"]).json()
+    oracle_source = requests.get(DATA_SOURCES_METADATA).json()["download_uri"]
+    oracle_data = requests.get(oracle_source).json()
 
     def valid_card(card):
         return (card["object"] == "card"
