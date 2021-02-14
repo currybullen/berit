@@ -28,8 +28,12 @@ def fetch_cards_from_source():
     def sort_key(card):
         return re.match("Legendary.*Creature", card["type_line"]) is None
 
+    def trim_card(card):
+        return {"commander": bool(re.match("Legendary.*Creature", card["type_line"])),
+                "scryfall_uri": card["scryfall_uri"]}
+
     cards = sorted(filter(valid_card, oracle_data), key=sort_key)
-    return {card["name"].lower(): card for card in cards}
+    return {card["name"].lower(): trim_card(card) for card in cards}
 
 
 def find_card(pattern, cards):
@@ -39,7 +43,7 @@ def find_card(pattern, cards):
         return list(cards.values())[random.randint(0, len(cards) - 1)]
 
     if pattern == "!random_commander":
-        commanders = filter(lambda card: re.match("Legendary.*Creature", card["type_line"]), list(cards.values()))
+        commanders = filter(lambda card: card["commander"], list(cards.values()))
         commanders = list(commanders)
         return commanders[random.randint(0, len(commanders) - 1)]
 
