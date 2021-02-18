@@ -8,6 +8,14 @@ import os
 import random
 
 DATA_SOURCES_METADATA = "https://api.scryfall.com/bulk-data/oracle-cards"
+HELP_TEXT = """
+    Berit listens to the following commands:
+
+    [<substring>]: Find the first EDH legal card matching <substring>. Legendary creatures are prioritized.
+    [!random_commander]: Find a random EDH legal commander.
+    [!random_rare]: Find a random EDH legal rare.
+    [!help]: Print this text
+    """
 
 
 def main(args):
@@ -24,35 +32,50 @@ def fetch_cards_from_source():
                 and card["lang"] == "en"
                 and card["legalities"]["commander"] == "legal")
 
-    def sort_key(card):
+    def sort_by_type(card):
         return re.match("Legendary.*Creature", card["type_line"]) is None
+
+    cards = sorted(filter(valid_card, oracle_data), key=sort_by_type)
 
     def trim_card(card):
         return {"commander": bool(re.match("Legendary.*Creature", card["type_line"])),
                 "scryfall_uri": card["scryfall_uri"]}
 
-    cards = sorted(filter(valid_card, oracle_data), key=sort_key)
     return {card["name"].lower(): trim_card(card) for card in cards}
 
 
-def find_card(pattern, cards):
-    pattern = pattern.lower()
+def run_commands(commands, cards):
+    if "!help" in commands:
+        return [HELP_TEXT]
+    else:
+        return list(filter(None, [run_command(command, cards) for command in commands]))
 
-    if pattern == "!random":
-        return list(cards.values())[random.randint(0, len(cards) - 1)]
 
-    if pattern == "!random_commander":
+def run_command(command, cards):
+    if command == "!random":
+        return list(cards.values())[random.randint(0, len(cards) - 1)]["scryfall_uri"]
+
+    if command == "!random_commander":
         commanders = filter(lambda card: card["commander"], list(cards.values()))
         commanders = list(commanders)
-        return commanders[random.randint(0, len(commanders) - 1)]
+        return commanders[random.randint(0, len(commanders) - 1)]["scryfall_uri"]
 
+    return find_card(command, cards)
+
+
+def find_card(pattern, cards):
     if cards.get(pattern):
-        return cards[pattern]
+        return cards[pattern]["scryfall_uri"]
 
-    return next(
-        map(lambda name: cards[name],
+    result = next(
+        map(lambda name: cards[name]["scryfall_uri"],
             filter(lambda name: pattern in name, cards.keys())),
         None)
+
+    if result is None:
+        logging.debug(f"No card(s) found matching pattern '{pattern}'.")
+
+    return result
 
 
 def start_discord_listener(cards, token, subscribed_channels):
@@ -72,20 +95,18 @@ def start_discord_listener(cards, token, subscribed_channels):
             logging.debug(f"Ignoring message sent in channel other than {subscribed_channels}.")
             return
 
-        patterns = re.findall("\[(.+?)\]", message.content)
-        if not patterns:
-            logging.debug(f"No patterns could be extracted from message '{message.content}'.")
+        commands = re.findall("\[(.+?)\]", message.content)
+        if not commands:
+            logging.debug(f"No commands could be extracted from message '{message.content}'.")
             return
 
-        matches = list(filter(None, map(lambda pattern: find_card(pattern, cards), patterns)))
-        if not matches:
-            logging.debug(f"No card(s) found matching patterns '{patterns}'.")
+        commands = [command.lower() for command in commands]
+        outputs = run_commands(commands, cards)
+        if not outputs:
             return
 
-        result = [card.get("scryfall_uri") for card in matches]
-        logging.info(f"Returning cards '{result}' matching patterns '{patterns}'.")
-        formatted_result = "\n".join(result)
-        await message.channel.send(f"{formatted_result}")
+        formatted_output = "\n".join(outputs)
+        await message.channel.send(f"{formatted_output}")
 
     client.run(token)
 
