@@ -123,7 +123,7 @@ def parse_args():
 
     args = parser.parse_args()
     if args.token is None:
-        logging.error("API supplied neither by --token or env variable BERIT_TOKEN")
+        logging.error("Bot token supplied neither by --token or env variable BERIT_TOKEN")
         sys.exit(1)
 
     return args
