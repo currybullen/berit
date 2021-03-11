@@ -4,7 +4,7 @@ WORKDIR /berit
 
 COPY requirements.txt .
 
-RUN apt-get update -y && apt-get install -y gcc
+RUN /bin/bash -c "if [[ "$(uname -m)" =~ arm ]]; then apt-get update -y && apt-get install -y gcc; fi"
 RUN pip install -r requirements.txt
 
 COPY berit.py .
