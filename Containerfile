@@ -9,6 +9,4 @@ RUN pip install -r requirements.txt
 
 COPY berit.py .
 
-# Needs token env variable or arg
-# Needs --channel argument
 ENTRYPOINT ["python", "berit.py"]
