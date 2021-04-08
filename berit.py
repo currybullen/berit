@@ -5,80 +5,67 @@ import discord
 import logging
 import argparse
 import os
-import random
 
-DATA_SOURCES_METADATA = "https://api.scryfall.com/bulk-data/oracle-cards"
+SEARCH_ENDPOINT = "https://api.scryfall.com/cards/search"
+RANDOM_ENDPOINT = "https://api.scryfall.com/cards/random"
+
+# TODO: Wrap lines here maybe
 HELP_TEXT = """
     Berit listens to the following commands:
 
-    [<substring>]: Find the first EDH legal card matching <substring>. Legendary creatures are prioritized.
-    [!random_commander]: Find a random EDH legal commander.
-    [!random_rare]: Find a random EDH legal rare.
-    [!help]: Print this text
+    [<search term>]:
+
+    Find the EDH legal card matching <search term> with the highest EDHREC score. Consult the full search reference at https://scryfall.com/docs/syntax.
+
+    [!random_commander]:
+
+    Find a random EDH legal commander.
+
+    [!random_rare]:
+
+    Find a random EDH legal card with rarity rare or rarer.
+
+    [!help]:
+
+    Print this text
     """
 
 
 def main(args):
-    cards = fetch_cards_from_source()
-    start_discord_listener(cards, args.token, args.channel)
+    start_discord_listener(args.token, args.channel)
 
 
-def fetch_cards_from_source():
-    oracle_source = requests.get(DATA_SOURCES_METADATA).json()["download_uri"]
-    oracle_data = requests.get(oracle_source).json()
-
-    def valid_card(card):
-        return (card["object"] == "card"
-                and card["lang"] == "en"
-                and card["legalities"]["commander"] == "legal")
-
-    def sort_by_type(card):
-        return re.match("Legendary.*Creature", card["type_line"]) is None
-
-    cards = sorted(filter(valid_card, oracle_data), key=sort_by_type)
-
-    def trim_card(card):
-        return {"commander": bool(re.match("Legendary.*Creature", card["type_line"])),
-                "scryfall_uri": card["scryfall_uri"]}
-
-    return {card["name"].lower(): trim_card(card) for card in cards}
-
-
-def run_commands(commands, cards):
+def run_commands(commands):
     if "!help" in commands:
         return [HELP_TEXT]
     else:
-        return list(filter(None, [run_command(command, cards) for command in commands]))
+        return list(filter(None, [run_command(command) for command in commands]))
 
 
-def run_command(command, cards):
-    if command == "!random":
-        return list(cards.values())[random.randint(0, len(cards) - 1)]["scryfall_uri"]
+def run_command(command):
+    if command.lower() == "!random_rare":
+        return requests.get(RANDOM_ENDPOINT, params={"q": "format:commander rarity>=rare"}).json()["scryfall_uri"]
 
-    if command == "!random_commander":
-        commanders = filter(lambda card: card["commander"], list(cards.values()))
-        commanders = list(commanders)
-        return commanders[random.randint(0, len(commanders) - 1)]["scryfall_uri"]
+    if command.lower() == "!random_commander":
+        return requests.get(RANDOM_ENDPOINT, params={"q": "is:commander"}).json()["scryfall_uri"]
 
-    return find_card(command, cards)
+    return find_card(command)
 
+def find_card(pattern):
+    payload = {
+        "q": f"{pattern}",
+        "order": "edhrec"
+    }
+    result = requests.get(SEARCH_ENDPOINT, params=payload).json()
 
-def find_card(pattern, cards):
-    if cards.get(pattern):
-        return cards[pattern]["scryfall_uri"]
+    if result["object"] != "list":
+        logging.debug(f"No cards found when requesting with parameters {payload}")
+        return None
 
-    result = next(
-        map(lambda name: cards[name]["scryfall_uri"],
-            filter(lambda name: pattern in name, cards.keys())),
-        None)
-
-    if result is None:
-        logging.debug(f"No card(s) found matching pattern '{pattern}'.")
-
-    return result
+    return result["data"][0]["scryfall_uri"]
 
 
-def start_discord_listener(cards, token, subscribed_channels):
+def start_discord_listener(token, subscribed_channels):
     client = discord.Client()
 
     @client.event
@@ -100,8 +87,7 @@ def start_discord_listener(cards, token, subscribed_channels):
             logging.debug(f"No commands could be extracted from message '{message.content}'.")
             return
 
-        commands = [command.lower() for command in commands]
-        outputs = run_commands(commands, cards)
+        outputs = run_commands(commands)
         if not outputs:
             return
 
