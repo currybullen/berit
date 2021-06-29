@@ -35,23 +35,25 @@ def main(args):
     start_discord_listener(args.token, args.channel)
 
 
-def run_commands(commands):
+def run_commands(commands: str) -> list[str]:
     if "!help" in commands:
         return [HELP_TEXT]
     else:
         return list(filter(None, [run_command(command) for command in commands]))
 
 
-def run_command(command):
-    if command.lower() == "!random_rare":
-        return requests.get(RANDOM_ENDPOINT, params={"q": "format:commander rarity>=rare"}).json()["scryfall_uri"]
+def run_command(command: str) -> str:
+    match command.lower():
+        case "!random_rare":
+            return requests.get(RANDOM_ENDPOINT, params={"q": "format:commander rarity>=rare"}).json()["scryfall_uri"]
+        case "!random_commander":
+            return requests.get(RANDOM_ENDPOINT, params={"q": "is:commander"}).json()["scryfall_uri"]
+        case _:
+            return find_card(command)
 
-    if command.lower() == "!random_commander":
-        return requests.get(RANDOM_ENDPOINT, params={"q": "is:commander"}).json()["scryfall_uri"]
 
-    return find_card(command)
 
-def find_card(pattern):
+def find_card(pattern: str) -> str:
     payload = {
         "q": f"{pattern}",
         "order": "edhrec"
@@ -65,7 +67,7 @@ def find_card(pattern):
     return result["data"][0]["scryfall_uri"]
 
 
-def start_discord_listener(token, subscribed_channels):
+def start_discord_listener(token: str, subscribed_channels: list[str]):
     client = discord.Client()
 
     @client.event
