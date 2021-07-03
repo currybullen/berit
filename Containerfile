@@ -8,4 +8,4 @@ RUN pip install -r requirements.txt
 
 COPY berit.py .
 
-ENTRYPOINT ["python", "berit.py"]
+CMD ["python", "berit.py"]
