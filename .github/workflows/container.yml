@@ -20,5 +20,5 @@ jobs:
     - name: Build and push container image
       id: docker-build
       run: |
-        docker build . -t quay.io/currybullen/berit:latest -t quay.io/currybullen/berit:${{ github.sha }}
+        docker build . -f Containerfile -t quay.io/currybullen/berit:latest -t quay.io/currybullen/berit:${{ github.sha }}
         docker push quay.io/currybullen/berit
