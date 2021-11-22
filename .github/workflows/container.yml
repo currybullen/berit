@@ -19,11 +19,6 @@ jobs:
 
     - name: Build and push container image
       id: docker-build
-      uses: docker/build-push-action@v2
-      with:
-        push: true
-        platforms: linux/amd64
-        tags: quay.io/currybullen/berit:latest
-
-    - name: Print image url
-      run: echo "Image pushed to ${{ steps.push-to-quay.outputs.registry-paths }}"
+      run: |
+        docker build . -t quay.io/currybullen/berit:latest -t quay.io/currybullen/berit:${{ github.sha }}
+        docker push quay.io/currybullen/berit
