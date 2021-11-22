@@ -22,6 +22,7 @@ jobs:
       uses: docker/build-push-action@v2
       with:
         push: true
+        platforms: linux/amd64
         tags: quay.io/currybullen/berit:latest
 
     - name: Print image url
