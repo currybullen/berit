@@ -31,6 +31,6 @@ jobs:
       with:
         file: Containerfile
         push: true
-        tags:
-        - quay.io/currybullen/berit:latest
-        - quay.io/currybullen/berit:${{ github.sha }}
+        tags: |
+          quay.io/currybullen/berit:latest
+          quay.io/currybullen/berit:${{ github.sha }}
