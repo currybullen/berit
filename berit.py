@@ -35,7 +35,7 @@ def main(args):
     start_discord_listener(args.token, args.channel)
 
 
-def run_commands(commands: str) -> List[str]:
+def run_commands(commands: str) -> list[str]:
     if "!help" in commands:
         return [HELP_TEXT]
     else:
