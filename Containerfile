@@ -1,11 +1,14 @@
 FROM docker.io/python:3.10.0-slim
 
-WORKDIR /berit
-
 RUN apt-get update -y && apt-get install -y gcc
-COPY requirements.txt .
+
+RUN useradd -m python
+USER python
+WORKDIR /home/python
+
+COPY --chown=python:python requirements.txt .
 RUN pip install -r requirements.txt
 
-COPY berit.py .
+COPY --chown=python:python berit.py .
 
 ENTRYPOINT ["python", "berit.py"]
