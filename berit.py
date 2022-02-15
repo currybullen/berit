@@ -45,19 +45,19 @@ def run_commands(commands: str) -> list[str]:
 def run_command(command: str) -> str:
     match command.lower():
         case "!random_rare":
-            return requests.get(RANDOM_ENDPOINT, params={"q": "format:commander rarity>=rare"}).json()["scryfall_uri"]
+            return requests.get(
+                RANDOM_ENDPOINT, params={"q": "format:commander rarity>=rare"}
+            ).json()["scryfall_uri"]
         case "!random_commander":
-            return requests.get(RANDOM_ENDPOINT, params={"q": "is:commander"}).json()["scryfall_uri"]
+            return requests.get(RANDOM_ENDPOINT, params={"q": "is:commander"}).json()[
+                "scryfall_uri"
+            ]
         case _:
             return find_card(command)
 
 
-
 def find_card(pattern: str) -> str:
-    payload = {
-        "q": f"{pattern}",
-        "order": "edhrec"
-    }
+    payload = {"q": f"{pattern}", "order": "edhrec"}
     result = requests.get(SEARCH_ENDPOINT, params=payload).json()
 
     if result["object"] != "list":
@@ -81,12 +81,16 @@ def start_discord_listener(token: str, subscribed_channels: list[str]):
             return
 
         if str(message.channel) not in subscribed_channels:
-            logging.debug(f"Ignoring message sent in channel other than {subscribed_channels}.")
+            logging.debug(
+                f"Ignoring message sent in channel other than {subscribed_channels}."
+            )
             return
 
         commands = re.findall("\[(.+?)\]", message.content)
         if not commands:
-            logging.debug(f"No commands could be extracted from message '{message.content}'.")
+            logging.debug(
+                f"No commands could be extracted from message '{message.content}'."
+            )
             return
 
         outputs = run_commands(commands)
@@ -101,17 +105,23 @@ def start_discord_listener(token: str, subscribed_channels: list[str]):
 
 def parse_args():
     parser = argparse.ArgumentParser(description="A Discord MTG bot ")
-    parser.add_argument("--token",
-                        help="Relevant Discord bot token.",
-                        default=os.environ.get("BERIT_TOKEN"))
-    parser.add_argument("--channel",
-                        action="append",
-                        help="A channel which Berit listens in. May be supplied multiple times.",
-                        required=True)
+    parser.add_argument(
+        "--token",
+        help="Relevant Discord bot token.",
+        default=os.environ.get("BERIT_TOKEN"),
+    )
+    parser.add_argument(
+        "--channel",
+        action="append",
+        help="A channel which Berit listens in. May be supplied multiple times.",
+        required=True,
+    )
 
     args = parser.parse_args()
     if args.token is None:
-        logging.error("Bot token supplied neither by --token or env variable BERIT_TOKEN")
+        logging.error(
+            "Bot token supplied neither by --token or env variable BERIT_TOKEN"
+        )
         sys.exit(1)
 
     return args
