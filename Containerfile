@@ -1,7 +1,5 @@
 FROM docker.io/python:3.10.0-slim
 
-RUN apt-get update -y && apt-get install -y gcc
-
 RUN useradd -m python
 USER python
 WORKDIR /home/python
